@@ -1,4 +1,4 @@
-##StatelessFactorizer
+## StatelessFactorizer
 
 `StatelessFactorizer` is, like most servlets, stateless: it has no fields and references no fields from other classes. The transient state for a particular computation exists solely in local variables that are stored on the thread's stack and are accessible only to the executing thread. 
 
@@ -8,7 +8,7 @@ Since the actions of a thread accessing a stateless object cannot affect the cor
 
 ***Stateless objects are always thread-safe.***
 
-##UnsafeCountingFactorizer
+## UnsafeCountingFactorizer
 
 `UnsafeCountingFactorizer` is not thread-safe, even though it would work just fine in a single-threaded environment.
 
@@ -22,13 +22,20 @@ The possibility of incorrect results in the presence of unlucky timing is so imp
 
 **A race condition occurs when the correctness of a computation depends on the relative timing or interleaving of multiple threads by the runtime; in other words, when getting the right answer relies on lucky timing.**
 
-##LazyInitRace
+## LazyInitRace
 `LazyInitRace` has race conditions that can undermine its correctness. 
 
 Say that threads A and B execute `getInstance` at the same time. A sees that instance is `null`, and instantiates a new `ExpensiveObject`. B also checks if instance is `null`. Whether instance is null at this point depends unpredictably on timing, including the vagaries of scheduling and how long A takes to instantiate the `ExpensiveObject` and set the instance field. If instance is `null` when B examines it, the two callers to `getInstance` may receive two different results, even though `getInstance` is always supposed to return the same instance.
 
-##CountingFactorizer
+## CountingFactorizer
 
 Both `LazyInitRace` and `UnsafeCountingFactorizer` contained a sequence of operations that needed to be atomic, or indivisible, relative to other operations on the same state. To avoid race conditions, there must be a way to prevent other threads from using a variable while we're in the middle of modifying it, so we can ensure that other threads can observe or modify the state only before we start or after we finish, but not in the middle.
 
 **Operations A and B** are atomic with respect to each other if, from the perspective of a thread executing A, when another thread executes B, either all of B has executed or none of it has. An atomic operation is one that is atomic with respect to all operations, including itself, that operate on the same state.
+
+## Intrinsic locks
+Java provides a built-in locking mechanism for enforcing atomicity: the `synchronized` block.
+
+A `synchronized` block has two parts: a reference to an object that will serve as the lock, and a block of code to be guarded by that lock. 
+
+A `synchronized` method is a shorthand for a `synchronized` block that spans an entire method body, **and whose lock is the object on which the method is being invoked**. (Static `synchronized` methods use the `Class` object for the lock.)
